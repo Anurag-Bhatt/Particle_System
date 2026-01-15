@@ -109,7 +109,7 @@ void ParticleSystem::OnRender(Shader& shader, Camera& camera, float fov)
 
 	shader.use();
 	shader.set_mat4("u_View", camera.look_at());
-	shader.set_mat4("u_Projection", glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f));
+	shader.set_mat4("u_Projection", glm::perspective(glm::radians(fov), camera.m_aspect_ratio, 0.1f, 100.0f));
 
 	m_QuadVA->Bind();
 

@@ -16,11 +16,13 @@ public:
 	void update_position(glm::vec3 distance);
 
 	float camera_speed = 5.0f;
+	float m_aspect_ratio = 800.0f / 600.0f;
 
 private:
 
 	glm::vec3 m_Position;
 	glm::vec3 m_Front;
 	glm::vec3 m_Up;
+
 
 };

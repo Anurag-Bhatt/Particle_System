@@ -24,10 +24,10 @@ void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 
 float zoom = 45.0f;
 
-const int window_height = 800;
-const int window_width  = 600;
+const int window_width  = 1280;
+const int window_height = 720;
 
-const float aspect_ratio = static_cast<float>(window_height) / window_width;
+const float aspect_ratio = static_cast<float>(window_width) / window_height;
 const float fov = 45.0f;
 
 // Camera variables
@@ -44,6 +44,7 @@ float current_frame = 0.0f;
 int main(void)
 {
     GLFWwindow* window;
+    cam.m_aspect_ratio = aspect_ratio;
 
     /* Initialize the library */
     if (!glfwInit())
@@ -54,7 +55,7 @@ int main(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(window_height, window_width, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(window_width, window_height, "Hello World", NULL, NULL);
     if (!window)
     {
         std::cerr << "Failed to create GLFW window\n";
@@ -84,6 +85,21 @@ int main(void)
     //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
+    ParticleProps props;
+     // Start at center
+    props.Velocity = { 0.0f, 2.0f, 0.0f }; // Move UP
+    props.VelocityVariation = { 6.0f, 1.0f, 0.0f }; // Spread out in X
+
+    props.ColorBegin = { 250 / 255.0f, 152 / 255.0f, 78 / 255.0f, 1.0f };
+    props.ColorEnd = { 254 / 255.0f, 109 / 255.0f, 41 / 255.0f, 0.0f };
+
+    props.SizeBegin = 0.5f;
+    props.SizeEnd = 0.0f; // Shrink to nothing
+    props.SizeVariation = 0.3f;
+
+    props.LifeTime = 1.0f;
+
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -105,19 +121,30 @@ int main(void)
         ps.OnRender(particle_shader, cam, zoom);
 
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            ParticleProps props;
-            props.Position = { 0.0f, 0.0f, 0.0f }; // Start at center
-            props.Velocity = { 0.0f, 2.0f, 0.0f }; // Move UP
-            props.VelocityVariation = { 6.0f, 1.0f, 0.0f }; // Spread out in X
+            
+            int width, height;
+            glfwGetWindowSize(window, &width, &height);
 
-            props.ColorBegin = { 250 / 255.0f, 152 / 255.0f, 78 / 255.0f, 1.0f }; 
-            props.ColorEnd = { 254 / 255.0f, 109 / 255.0f, 41 / 255.0f, 0.0f };  
+            double xPos, yPos;
+            glfwGetCursorPos(window, &xPos, &yPos);
 
-            props.SizeBegin = 0.5f;
-            props.SizeEnd = 0.0f; // Shrink to nothing
-            props.SizeVariation = 0.3f;
+            glm::mat4 projection = glm::perspective(glm::radians(fov), cam.m_aspect_ratio, 0.1f, 100.0f);
+            glm::mat4 view = cam.look_at();
+            glm::vec4 viewport = glm::vec4(0, 0, width, height);
 
-            props.LifeTime = 1.0f;
+            glm::vec3 windowPosNear = glm::vec3(xPos, height - yPos, 0.0f);
+            glm::vec3 windowPosFar = glm::vec3(xPos, height - yPos, 1.0f);
+
+            glm::vec3 rayStart = glm::unProject(windowPosNear, view, projection, viewport);
+            glm::vec3 rayEnd = glm::unProject(windowPosFar, view, projection, viewport);
+
+            glm::vec3 direction = glm::normalize(rayEnd - rayStart);
+            float t = (0.0f - rayStart.z) / direction.z;
+            glm::vec3 worldPos = rayStart + (direction * t);
+
+            //std::printf("Position: x:%f, y:%f, z:%f\n", worldPos.x, worldPos.y, worldPos.z);
+
+            props.Position = { worldPos.x, worldPos.y, 0.0f };
 
             // Emit 5 particles per frame for a thick trail
             for (int i = 0; i < 50; i++)
