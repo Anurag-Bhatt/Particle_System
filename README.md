@@ -2,7 +2,7 @@
 
 A custom particle engine built from scratch using OpenGL and C++. Designed to handle mass-rendering through instancing and memory pooling.
 
-![Particle System Demo]("GIFs/Particle_System_01.gif")
+![Particle System Demo](GIFs/Particle_System_01.gif)
 
 ## 🚀 Key Features
 * **Instanced Rendering:** Utilizes `glDrawElementsInstanced` to render thousands of particles in a single GPU draw call.
